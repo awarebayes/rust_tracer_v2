@@ -51,11 +51,22 @@ impl Vec3 {
         *self / self.len()
     }
 
-    pub fn as_color(&self) -> [u8; 4] {
+    pub fn clamp(&self, min: f64, max: f64) -> Vec3 {
+        return Vec3::new(
+            self.x.clamp(min, max),
+            self.y.clamp(min, max),
+            self.z.clamp(min, max),
+        );
+    }
+
+    pub fn as_color(&self, n_samples: usize) -> [u8; 4] {
+        let scale = 1.0 / n_samples as f64;
+        let s = *self * scale;
+        let s = s.clamp(0.0, 0.999);
         [
-            (self.x * 255.999) as u8,
-            (self.y * 255.999) as u8,
-            (self.z * 255.999) as u8,
+            (s.x * 255.999) as u8,
+            (s.y * 255.999) as u8,
+            (s.z * 255.999) as u8,
             255,
         ]
     }

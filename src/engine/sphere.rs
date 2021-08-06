@@ -1,5 +1,5 @@
 use crate::data::vec3::Vec3;
-use crate::engine::hittable::{Hittable, HitRecord};
+use crate::engine::hittable::{HitRecord, Hittable};
 
 pub struct Sphere {
     center: Vec3,
