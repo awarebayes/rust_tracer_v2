@@ -1,4 +1,7 @@
+use std::sync::Arc;
+
 use crate::data::vec3::{Point3, Vec3};
+use crate::data::{Lambertian, Material};
 use crate::engine::ray::Ray;
 
 #[derive(Clone)]
@@ -7,6 +10,7 @@ pub struct HitRecord {
     pub normal: Vec3,
     pub t: f64,
     pub front_face: bool,
+    pub mat_ptr: Arc<dyn Material + Send + Sync>,
 }
 
 impl HitRecord {
@@ -24,6 +28,7 @@ impl HitRecord {
             normal: Vec3::new(0.0, 0.0, 0.0),
             t: 0.0,
             front_face: false,
+            mat_ptr: Lambertian::black_sh(),
         }
     }
 }

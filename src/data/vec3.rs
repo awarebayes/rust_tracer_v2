@@ -1,4 +1,5 @@
-use std::ops;
+use rand::{random, Rng};
+use std::{cmp::min, ops};
 
 const CLOSE_PREC: f64 = 10e-6;
 
@@ -11,6 +12,10 @@ pub struct Vec3 {
 
 pub type Point3 = Vec3;
 pub type Color = Vec3;
+
+fn rand_float(min: f64, max: f64) -> f64 {
+    min + (max - min) * random::<f64>()
+}
 
 impl Vec3 {
     pub fn x(&self) -> f64 {
@@ -35,6 +40,49 @@ impl Vec3 {
         Vec3 { x, y, z }
     }
 
+    pub fn zero() -> Vec3 {
+        Vec3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
+    pub fn random() -> Vec3 {
+        Self::new(random(), random(), random())
+    }
+
+    pub fn rand_range(min: f64, max: f64) -> Vec3 {
+        Vec3::new(
+            rand_float(min, max),
+            rand_float(min, max),
+            rand_float(min, max),
+        )
+    }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random();
+            if p.len_sq() <= 1.0 {
+                continue;
+            };
+            return p;
+        }
+    }
+
+    pub fn random_unit_vector() -> Vec3 {
+        Vec3::random_in_unit_sphere().unit()
+    }
+
+    pub fn random_in_hemisphere(normal: &Vec3) -> Vec3 {
+        let in_unit_sphere = Vec3::random_in_unit_sphere();
+        if in_unit_sphere.dot(normal) > 0.0 {
+            return in_unit_sphere;
+        } else {
+            return -1.0 * in_unit_sphere;
+        }
+    }
+
     pub fn dot(&self, other: &Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }
@@ -45,6 +93,21 @@ impl Vec3 {
             self.z * other.x - self.x * other.z,
             self.x * other.y - self.y * other.x,
         )
+    }
+
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
+        *self - *normal * 2.0 * self.dot(normal)
+    }
+
+    pub fn refract(&self, normal: &Vec3, etai_over_etat: f64) -> Vec3 {
+        let cos_theta = (-1.0 * *self).dot(normal).min(1.0);
+        let r_out_perp = etai_over_etat * (*self + cos_theta * *normal);
+        let r_out_parralel = -(1.0 - r_out_perp.len_sq()).abs().sqrt() * *normal;
+        r_out_perp + r_out_parralel
+    }
+
+    pub fn near_zero(&self) -> bool {
+        (self.x.abs() < CLOSE_PREC) && (self.y.abs() < CLOSE_PREC) && (self.z.abs() < CLOSE_PREC)
     }
 
     pub fn unit(&self) -> Vec3 {
@@ -63,10 +126,15 @@ impl Vec3 {
         let scale = 1.0 / n_samples as f64;
         let s = *self * scale;
         let s = s.clamp(0.0, 0.999);
+        let (mut r, mut g, mut b) = (s.x, s.y, s.z);
+        r = r.sqrt();
+        g = g.sqrt();
+        b = b.sqrt();
+
         [
-            (s.x * 255.999) as u8,
-            (s.y * 255.999) as u8,
-            (s.z * 255.999) as u8,
+            (r * 255.999) as u8,
+            (g * 255.999) as u8,
+            (b * 255.999) as u8,
             255,
         ]
     }

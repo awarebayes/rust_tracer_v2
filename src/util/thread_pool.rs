@@ -1,3 +1,5 @@
+use std::sync::atomic::AtomicI64;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -20,9 +22,12 @@ pub struct RTThreadPool {
     workers: Vec<Worker>,
     sender: Sender<Message>,
     receiver: Option<Receiver<ResultMessage>>,
-    pub end_image: Vec<[u8; 4]>,
+    collect_handle: Option<thread::JoinHandle<()>>,
+    bar: Arc<ProgressBar>,
+    pub end_image: Arc<Mutex<Vec<[u8; 4]>>>,
     height: usize,
     width: usize,
+    busy_workers: Arc<AtomicI64>,
 }
 
 type JobFn = dyn FnMut(Arc<Mutex<rand::rngs::StdRng>>) -> ResultMessage + Send + 'static;
@@ -33,7 +38,7 @@ enum Message {
     Terminate,
 }
 
-struct PlacedPixelErr {
+pub struct PlacedPixelErr {
     i: usize,
     j: usize,
 }
@@ -51,6 +56,7 @@ impl RTThreadPool {
         let thread_receiver = Arc::new(Mutex::new(thread_receiver));
         let thread_sender = Arc::new(thread_sender);
         let mut workers = Vec::with_capacity(size);
+        let bar = Arc::new(ProgressBar::new(height as u64));
 
         for id in 0..size {
             workers.push(Worker::new(
@@ -60,7 +66,7 @@ impl RTThreadPool {
             ));
         }
 
-        let end_image = vec![[0,0,0,255]; width * height];
+        let end_image = Arc::new(Mutex::new(vec![[0, 0, 0, 255]; width * height]));
 
         RTThreadPool {
             workers,
@@ -69,6 +75,9 @@ impl RTThreadPool {
             end_image,
             width,
             height,
+            collect_handle: None,
+            bar,
+            busy_workers: Arc::new(AtomicI64::new(0)),
         }
     }
 
@@ -78,19 +87,19 @@ impl RTThreadPool {
     {
         let job = Box::new(f);
         self.sender.send(Message::NewJob(job)).unwrap();
+        self.busy_workers.fetch_add(1, Ordering::SeqCst);
     }
 
-    pub fn collect(&mut self) {
+    pub fn start_collecting(&mut self) {
         let receiver_handle = self.receiver.take().unwrap();
-        let end_image = Arc::new(Mutex::new(self.end_image.clone()));
-        let image_ref = Arc::clone(&end_image);
+        let image_ref = Arc::clone(&self.end_image);
         let height = self.height;
         let width = self.width;
         let total_pixels = width * height;
-        let bar = Arc::new(ProgressBar::new(height as u64));
-        let bar_ref = Arc::clone(&bar);
+        let bar_ref = Arc::clone(&self.bar);
+        let workers_ref = Arc::clone(&self.busy_workers);
 
-        let collect_handle = thread::spawn(move || {
+        self.collect_handle = Some(thread::spawn(move || {
             let mut pixels_placed = 0;
             while pixels_placed < total_pixels {
                 let message = receiver_handle.recv().unwrap();
@@ -103,16 +112,26 @@ impl RTThreadPool {
                         println!("Failed to shoot ray at {} {}", e.i, e.j);
                     }
                 }
+                workers_ref.fetch_add(-1, Ordering::SeqCst);
                 pixels_placed += 1;
                 if pixels_placed % width == 0 {
                     bar_ref.inc(1);
                 }
             }
-        });
+        }));
+    }
 
-        collect_handle.join().unwrap();
-        bar.finish();
-        self.end_image = end_image.lock().unwrap().clone();
+    pub fn get_busy_workers(&self) -> i64 {
+        self.busy_workers.load(Ordering::SeqCst)
+    }
+
+    pub fn has_free(&self) -> bool {
+        self.get_busy_workers() < self.workers.len() as i64
+    }
+
+    pub fn collect(&mut self) {
+        self.collect_handle.take().unwrap().join().unwrap();
+        self.bar.finish();
     }
 }
 
