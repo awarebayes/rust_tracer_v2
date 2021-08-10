@@ -7,7 +7,7 @@ use super::Texture;
 const POINT_COUNT: usize = 256;
 
 pub struct Perlin {
-    ranfloat: Vec<f64>,
+    ranvec: Vec<Vec3>,
     perm_x: Vec<i64>,
     perm_y: Vec<i64>,
     perm_z: Vec<i64>,
@@ -17,7 +17,7 @@ pub struct Perlin {
 impl Perlin {
     pub fn empty() -> Perlin {
         Perlin {
-            ranfloat: Vec::new(),
+            ranvec: Vec::new(),
             perm_x: Vec::new(),
             perm_y: Vec::new(),
             perm_z: Vec::new(),
@@ -27,11 +27,11 @@ impl Perlin {
 
     pub fn new() -> Perlin {
         let mut p = Perlin::empty();
-        let mut ranfloat = vec![0.0; POINT_COUNT];
+        let mut ranvec = vec![Vec3::zero(); POINT_COUNT];
         for i in 0..POINT_COUNT {
-            ranfloat[i] = random();
+            ranvec[i] = Vec3::rand_range(-1.0, 1.0);
         }
-        p.ranfloat = ranfloat;
+        p.ranvec = ranvec;
         p.perm_x = p.generate_perm();
         p.perm_y = p.generate_perm();
         p.perm_z = p.generate_perm();
@@ -57,16 +57,23 @@ impl Perlin {
         }
     }
 
-    fn trilinear_interp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn perlin_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
         let mut accum = 0.0;
+
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
+
         for i in 0..2 {
             for j in 0..2 {
                 for k in 0..2 {
                     let c_ijk = c[i][j][k];
+                    let weight_v = Vec3::new(u-i as f64, v-j as f64, w-k as f64);
                     let (i, j, k) = (i as f64, j as f64, k as f64);
-                    accum += (i*u + (1.0-i)*(1.0-u)) *
-                             (j*v + (1.0-j)*(1.0-v)) *
-                             (k*w + (1.0-k)*(1.0-w)) * c_ijk; 
+                    accum += (i*uu + (1.0-i)*(1.0-uu)) *
+                             (j*vv + (1.0-j)*(1.0-vv)) *
+                             (k*ww + (1.0-k)*(1.0-ww)) * 
+                             c_ijk.dot(&weight_v); 
                 }
             }
         }
@@ -78,20 +85,16 @@ impl Perlin {
         let mut v = p.y() - p.y().floor();
         let mut w = p.z() - p.z().floor();
 
-        u = u * u * (3.0-2.0*u);
-        v = v * v * (3.0-2.0*v);
-        w = w * w * (3.0-2.0*w);
-
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
 
-        let mut c = [[[0.0; 2]; 2]; 2];
+        let mut c = [[[Vec3::zero(); 2]; 2]; 2];
 
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    c[di][dj][dk] = self.ranfloat[(
+                    c[di][dj][dk] = self.ranvec[(
                           self.perm_x[((i + di as i32) & 255) as usize]
                         ^ self.perm_y[((j + dj as i32) & 255) as usize]
                         ^ self.perm_z[((k + dk as i32) & 255) as usize])
@@ -99,7 +102,7 @@ impl Perlin {
                 }
             }
         }
-        Perlin::trilinear_interp(&c, u, v, w)
+        Perlin::perlin_interp(&c, u, v, w)
     }
 }
 
@@ -110,7 +113,7 @@ pub struct PerlinTexture {
 
 impl Texture for PerlinTexture {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
-        Color::new(1.0, 1.0, 1.0) * self.noise.noise(&(self.scale * *p))
+        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + self.noise.noise(&(self.scale * *p)))
     }
 }
 
