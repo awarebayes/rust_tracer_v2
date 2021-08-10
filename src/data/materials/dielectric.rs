@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use rand::random;
 
 use crate::{
-    data::{Color, Vec3},
+    data::Color,
     engine::{HitRecord, Ray},
 };
 

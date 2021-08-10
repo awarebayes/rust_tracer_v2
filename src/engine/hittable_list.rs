@@ -33,7 +33,7 @@ impl Hittable for HittableList {
         for i in self.objects.iter() {
             if i.hit(ray, t_min, closest, &mut temp_rec) {
                 hit_anything = true;
-                closest = rec.t;
+                closest = temp_rec.t;
                 *rec = temp_rec.clone();
             }
         }

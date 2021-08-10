@@ -83,6 +83,17 @@ impl Vec3 {
         }
     }
 
+    pub fn random_in_unit_disk() -> Vec3 {
+        loop {
+            let mut p = Vec3::rand_range(-1.0, 1.0);
+            p.z = 0.0;
+            if p.len_sq() >= 1.0 {
+                continue;
+            };
+            return p;
+        }
+    }
+
     pub fn dot(&self, other: &Vec3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
     }

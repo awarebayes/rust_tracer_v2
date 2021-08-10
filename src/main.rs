@@ -2,23 +2,21 @@ mod data;
 mod engine;
 mod util;
 
-use data::{materials::Dielectric, Color, Lambertian, Metal, Vec3};
+use data::{materials::Dielectric, worlds::marble_land, Color, Lambertian, Material, Metal, Point3, Vec3};
 use engine::{Camera, HitRecord, Hittable, HittableList, Ray, Sphere};
-use util::thread_pool::{PlacedPixel, RTThreadPool, ResultMessage};
+use util::thread_pool::{PlacedPixel, RTThreadPool};
 
-use std::{
-    hint,
-    sync::{Arc, Barrier, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use lodepng;
-use rand::Rng;
+use rand::{random, Rng};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 640;
+const WIDTH: usize = 1920;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 100;
+const SAMPLES_PER_PIXEL: usize = 500;
 const MAX_DEPTH: usize = 100;
+const N_THREADS: usize = 10;
 
 fn ray_color(
     r: &Ray,
@@ -49,46 +47,26 @@ fn ray_color(
 }
 
 fn generate_image() -> Vec<[u8; 4]> {
-    // materials
+    let world = marble_land();
 
-    let mat_ground = Arc::new(Lambertian::new(0.8, 0.8, 0.8));
-    let mat_center = Arc::new(Lambertian::new(0.7, 0.3, 0.3));
-    let mat_left = Arc::new(Dielectric::new(1.5));
-    let mat_right = Arc::new(Metal::new(0.8, 0.6, 0.2, 0.0));
-
-    // world
-    let mut world = HittableList::new();
-    world.add(Arc::new(Sphere::new(
-        Vec3::new(0.0, 0.0, -1.0),
-        0.5,
-        mat_center.clone(),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        0.5,
-        mat_left.clone(),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Vec3::new(-1.0, 0.0, -1.0),
-        -0.4,
-        mat_left.clone(),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Vec3::new(1.0, 0.0, -1.0),
-        0.5,
-        mat_right.clone(),
-    )));
-    world.add(Arc::new(Sphere::new(
-        Vec3::new(0.0, -100.5, -1.0),
-        100.0,
-        mat_ground.clone(),
-    )));
-
-    let mut pool = RTThreadPool::new(10, WIDTH, HEIGHT);
+    let mut pool = RTThreadPool::new(N_THREADS, WIDTH, HEIGHT);
     pool.start_collecting();
 
-    let world = Arc::new(world);
-    let camera = Camera::new();
+    let look_from = Point3::new(13.0, 2.0, 3.0);
+    let look_at = Point3::new(0.0, 0.0, 0.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = 10.0;
+    let aperture = 0.1;
+
+    let camera = Camera::new(
+        look_from,
+        look_at,
+        vup,
+        ASPECT_RATIO,
+        20.0,
+        aperture,
+        dist_to_focus,
+    );
     let camera = Arc::new(camera);
 
     for j in 0..HEIGHT {
@@ -106,15 +84,12 @@ fn generate_image() -> Vec<[u8; 4]> {
                     let ray = camera.get_ray(u, v);
                     pixel_color += ray_color(&ray, world.clone(), &mut rng, MAX_DEPTH);
                 }
-                ResultMessage::Ok(PlacedPixel {
+                Ok(PlacedPixel {
                     i,
                     j,
                     color: pixel_color.as_color(SAMPLES_PER_PIXEL),
                 })
             };
-            while !pool.has_free() {
-                hint::spin_loop();
-            }
             pool.execute(process_pixel);
         }
     }

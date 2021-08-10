@@ -44,7 +44,6 @@ impl Hittable for Sphere {
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(ray, &outward_normal);
         rec.mat_ptr = Arc::clone(&self.mat_ptr);
-
         return true;
     }
 }
