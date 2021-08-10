@@ -104,6 +104,19 @@ impl Perlin {
         }
         Perlin::perlin_interp(&c, u, v, w)
     }
+
+    pub fn turb(&self, p: &Point3, depth: i32) -> f64 {
+        let mut accum = 0.0;
+        let mut temp_p = p.clone();
+        let mut weight = 1.0;
+
+        for _ in 0..depth {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+        accum.abs()
+    }
 }
 
 pub struct PerlinTexture {
@@ -113,7 +126,8 @@ pub struct PerlinTexture {
 
 impl Texture for PerlinTexture {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
-        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + self.noise.noise(&(self.scale * *p)))
+        // Color::new(1.0, 1.0, 1.0) * self.noise.turb(&(self.scale * *p), 7)
+        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turb(&(self.scale * *p), 7)).sin())
     }
 }
 
@@ -124,4 +138,6 @@ impl PerlinTexture {
             scale,
         }
     }
+
+
 }
