@@ -49,7 +49,7 @@ impl Hittable for HittableList {
         let mut first_box = true;
 
         for object in self.objects.iter() {
-            if !object.bounding_box(output_box) {
+            if !object.bounding_box(&mut temp_box) {
                 return false;
             }
             *output_box = if first_box {

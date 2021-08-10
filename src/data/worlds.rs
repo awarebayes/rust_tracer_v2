@@ -5,7 +5,7 @@ use rand::random;
 use crate::data::{materials::Dielectric, Color, Lambertian, Material, Metal, Point3, Vec3};
 use crate::engine::{HittableList, Sphere};
 
-use super::textures::CheckerTexture;
+use super::textures::{CheckerTexture, PerlinTexture};
 
 pub fn marble_land() -> Arc<HittableList> {
     let mut world = HittableList::new();
@@ -123,19 +123,16 @@ pub fn three_balls() -> Arc<HittableList> {
 pub fn balls_perlin() -> Arc<HittableList> {
     let mut world = HittableList::new();
 
-    let checker = Arc::new(CheckerTexture::from_colors(
-        Color::new(0.2, 0.3, 0.1),
-        Color::new(0.9, 0.9, 0.9),
-    ));
+    let checker = Arc::new(PerlinTexture::new(4.0));
     world.add(Arc::new(Sphere::new(
-        Point3::new(0.0, -10.0, 0.0),
-        10.0,
+        Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
         Arc::new(Lambertian::from_texture(checker.clone())),
     )));
 
     world.add(Arc::new(Sphere::new(
-        Point3::new(0.0, 10.0, 0.0),
-        10.0,
+        Point3::new(0.0, 2.0, 0.0),
+        2.0,
         Arc::new(Lambertian::from_texture(checker.clone())),
     )));
 
