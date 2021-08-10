@@ -1,14 +1,17 @@
 use std::sync::Arc;
 
 use crate::{
-    data::{Color, Vec3},
+    data::{
+        textures::{SharedTexture, SolidColor},
+        Color, Texture, Vec3,
+    },
     engine::{HitRecord, Ray},
 };
 
 use super::Material;
 
 pub struct Lambertian {
-    albedo: Color,
+    albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 impl Material for Lambertian {
@@ -24,21 +27,27 @@ impl Material for Lambertian {
             scatter_dir = rec.normal;
         }
         *scattered = Ray::new(rec.p, scatter_dir);
-        *attenuation = self.albedo;
+        *attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         true
     }
 }
 
 impl Lambertian {
     pub fn black_sh() -> Arc<dyn Material + Send + Sync> {
-        Arc::new(Lambertian {
-            albedo: Color::new(0.0, 0.0, 0.0),
-        })
+        Arc::new(Lambertian::from_color(Color::new(0.0, 0.0, 0.0)))
     }
 
-    pub fn new(r: f64, g: f64, b: f64) -> Lambertian {
+    pub fn from_color(color: Color) -> Lambertian {
         Lambertian {
-            albedo: Color::new(r, g, b),
+            albedo: Arc::new(SolidColor::from_color(color)),
         }
+    }
+
+    pub fn from_rgb(r: f64, g: f64, b: f64) -> Lambertian {
+        Lambertian::from_color(Color::new(r, g, b))
+    }
+
+    pub fn from_texture(texture: SharedTexture) -> Lambertian {
+        Lambertian { albedo: texture }
     }
 }

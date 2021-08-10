@@ -2,7 +2,7 @@ use std::{cmp::Ordering, sync::Arc};
 
 use rand::Rng;
 
-use super::{AABB, Hittable};
+use super::{Hittable, AABB};
 
 pub struct BVHnode {
     left: Arc<dyn Hittable + Send + Sync>,
@@ -24,10 +24,9 @@ impl BVHnode {
 
         let left = match object_span {
             1 => Arc::clone(&objects[start]),
-            2 => Arc::clone(match comparator(&objects[start], &objects[start+1])
-            {
+            2 => Arc::clone(match comparator(&objects[start], &objects[start + 1]) {
                 Ordering::Less => &objects[start],
-                _ => &objects[start+1]
+                _ => &objects[start + 1],
             }),
             _ => {
                 objects.sort_by(|a, b| AABB::box_cmp(a, b, axis));
@@ -35,20 +34,17 @@ impl BVHnode {
                 Arc::new(BVHnode::new(objects, start, mid))
             }
         };
-        let right= match object_span {
+        let right = match object_span {
             1 => Arc::clone(&objects[start]),
-            2 => Arc::clone(match comparator(&objects[start], &objects[start+1])
-            {
-                Ordering::Less => &objects[start+1],
-                _ => &objects[start]
+            2 => Arc::clone(match comparator(&objects[start], &objects[start + 1]) {
+                Ordering::Less => &objects[start + 1],
+                _ => &objects[start],
             }),
             _ => {
                 let mid = start + object_span / 2;
                 Arc::new(BVHnode::new(objects, mid, end))
             }
-        }; 
-
-   
+        };
 
         let mut box_left = AABB::empty();
         let mut box_right = AABB::empty();

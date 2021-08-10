@@ -2,14 +2,14 @@ mod data;
 mod engine;
 mod util;
 
-use data::{materials::Dielectric, worlds::marble_land, Color, Lambertian, Material, Metal, Point3, Vec3};
-use engine::{Camera, HitRecord, Hittable, HittableList, Ray, Sphere};
+use data::{Color, Point3, Vec3, worlds::{balls_perlin, marble_land}};
+use engine::{Camera, HitRecord, Hittable, Ray};
 use util::thread_pool::{PlacedPixel, RTThreadPool};
 
 use std::sync::{Arc, Mutex};
 
 use lodepng;
-use rand::{random, Rng};
+use rand::Rng;
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const WIDTH: usize = 800;
@@ -47,7 +47,7 @@ fn ray_color(
 }
 
 fn generate_image() -> Vec<[u8; 4]> {
-    let world = marble_land();
+    let world = balls_perlin();
 
     let mut pool = RTThreadPool::new(N_THREADS, WIDTH, HEIGHT);
     pool.start_collecting();
@@ -56,7 +56,7 @@ fn generate_image() -> Vec<[u8; 4]> {
     let look_at = Point3::new(0.0, 0.0, 0.0);
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
+    let aperture = 0.0;
 
     let camera = Camera::new(
         look_from,

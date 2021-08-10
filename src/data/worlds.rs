@@ -1,4 +1,3 @@
-
 use std::sync::Arc;
 
 use rand::random;
@@ -6,11 +5,16 @@ use rand::random;
 use crate::data::{materials::Dielectric, Color, Lambertian, Material, Metal, Point3, Vec3};
 use crate::engine::{HittableList, Sphere};
 
-pub fn marble_land() -> Arc<HittableList> {
+use super::textures::CheckerTexture;
 
+pub fn marble_land() -> Arc<HittableList> {
     let mut world = HittableList::new();
 
-    let ground_mat = Arc::new(Lambertian::new(0.5, 0.5, 0.5));
+    let checker = Arc::new(CheckerTexture::from_colors(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    let ground_mat = Arc::new(Lambertian::from_texture(checker));
     world.add(Arc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
@@ -27,7 +31,7 @@ pub fn marble_land() -> Arc<HittableList> {
                 let mut material_ptr: Option<Arc<dyn Material + Send + Sync>> = None;
                 if choose_mat < 0.8 {
                     let albedo = Color::random() * Color::random();
-                    material_ptr = Some(Arc::new(Lambertian::new(
+                    material_ptr = Some(Arc::new(Lambertian::from_rgb(
                         albedo.x(),
                         albedo.y(),
                         albedo.z(),
@@ -66,7 +70,7 @@ pub fn marble_land() -> Arc<HittableList> {
     let mat1 = Arc::new(Dielectric::new(1.5));
     world.add(Arc::new(Sphere::new(Point3::new(0.0, 1.0, 0.0), 1.0, mat1)));
 
-    let mat2 = Arc::new(Lambertian::new(0.4, 0.2, 0.1));
+    let mat2 = Arc::new(Lambertian::from_rgb(0.4, 0.2, 0.1));
     world.add(Arc::new(Sphere::new(
         Point3::new(-4.0, 1.0, 0.0),
         1.0,
@@ -81,8 +85,8 @@ pub fn marble_land() -> Arc<HittableList> {
 
 pub fn three_balls() -> Arc<HittableList> {
     let mut world = HittableList::new();
-    let mat_ground = Arc::new(Lambertian::new(0.8, 0.8, 0.0));
-    let mat_center = Arc::new(Lambertian::new(0.1, 0.2, 0.5));
+    let mat_ground = Arc::new(Lambertian::from_rgb(0.8, 0.8, 0.0));
+    let mat_center = Arc::new(Lambertian::from_rgb(0.1, 0.2, 0.5));
     let mat_left = Arc::new(Dielectric::new(1.5));
     let mat_right = Arc::new(Metal::new(0.8, 0.6, 0.2, 0.0));
 
@@ -111,6 +115,28 @@ pub fn three_balls() -> Arc<HittableList> {
         Vec3::new(0.0, -100.5, -1.0),
         100.0,
         mat_ground.clone(),
+    )));
+
+    Arc::new(world)
+}
+
+pub fn balls_perlin() -> Arc<HittableList> {
+    let mut world = HittableList::new();
+
+    let checker = Arc::new(CheckerTexture::from_colors(
+        Color::new(0.2, 0.3, 0.1),
+        Color::new(0.9, 0.9, 0.9),
+    ));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::from_texture(checker.clone())),
+    )));
+
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        Arc::new(Lambertian::from_texture(checker.clone())),
     )));
 
     Arc::new(world)

@@ -13,6 +13,8 @@ pub struct HitRecord {
     pub t: f64,
     pub front_face: bool,
     pub mat_ptr: Arc<dyn Material + Send + Sync>,
+    pub u: f64,
+    pub v: f64,
 }
 
 impl HitRecord {
@@ -31,6 +33,8 @@ impl HitRecord {
             t: 0.0,
             front_face: false,
             mat_ptr: Lambertian::black_sh(),
+            u: 0.0,
+            v: 0.0,
         }
     }
 }

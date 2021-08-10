@@ -1,5 +1,8 @@
 use rand::{random, Rng};
-use std::{cmp::min, ops::{self, Index}};
+use std::{
+    cmp::min,
+    ops::{self, Index},
+};
 
 const CLOSE_PREC: f64 = 10e-6;
 
@@ -228,7 +231,7 @@ impl Index<usize> for Vec3 {
             0 => &self.x,
             1 => &self.y,
             2 => &self.z,
-            _ => panic!("Index out of range")
+            _ => panic!("Index out of range"),
         }
     }
 }

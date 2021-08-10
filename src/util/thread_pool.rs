@@ -53,8 +53,7 @@ impl RTThreadPool {
         let mut workers = Vec::with_capacity(size);
         let bar = Arc::new(ProgressBar::new(height as u64));
         bar.set_style(
-            ProgressStyle::default_bar()
-                .template("[{elapsed}|{eta}] {bar:60} {pos}/{len}"),
+            ProgressStyle::default_bar().template("[{elapsed}|{eta}] {bar:60} {pos}/{len}"),
         );
 
         for id in 0..size {

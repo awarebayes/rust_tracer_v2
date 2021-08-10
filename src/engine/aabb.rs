@@ -16,7 +16,10 @@ impl AABB {
     }
 
     pub fn empty() -> AABB {
-        AABB { min: Point3::zero(), max: Point3::zero() }
+        AABB {
+            min: Point3::zero(),
+            max: Point3::zero(),
+        }
     }
 
     pub fn surrounding_box(box0: &AABB, box1: &AABB) -> AABB {
@@ -34,12 +37,15 @@ impl AABB {
         AABB::new(small, big)
     }
 
-    pub fn box_cmp<'a>(a: &'a Arc<dyn Hittable + Send + Sync>, b: &'a Arc<dyn Hittable + Send + Sync>, axis: usize) -> Ordering {
+    pub fn box_cmp<'a>(
+        a: &'a Arc<dyn Hittable + Send + Sync>,
+        b: &'a Arc<dyn Hittable + Send + Sync>,
+        axis: usize,
+    ) -> Ordering {
         let mut box_a = AABB::empty();
         let mut box_b = AABB::empty();
 
-        if !a.bounding_box(&mut box_a) || !b.bounding_box(&mut box_b) 
-        {
+        if !a.bounding_box(&mut box_a) || !b.bounding_box(&mut box_b) {
             eprint!("No bounding box in bvh nore constructor");
         }
 
@@ -54,13 +60,12 @@ impl Hittable for AABB {
         let mut t_min = t_min;
         let mut t_max = t_max;
         for a in 0..3 {
-            let inv_d =  1.0 / r.dir()[a];
+            let inv_d = 1.0 / r.dir()[a];
             let t0 = (self.min[a] - r.origin()[a]) * inv_d;
             let t1 = (self.max[a] - r.origin()[a]) * inv_d;
             t_min = f64::max(t0, t_min);
             t_max = f64::min(t1, t_max);
-            if t_max <= t_min
-            {
+            if t_max <= t_min {
                 return false;
             }
         }

@@ -1,4 +1,4 @@
-use super::{AABB, ray::Ray};
+use super::{ray::Ray, AABB};
 use crate::engine::hittable::{HitRecord, Hittable};
 use std::sync::Arc;
 
@@ -41,16 +41,24 @@ impl Hittable for HittableList {
     }
 
     fn bounding_box(&self, output_box: &mut AABB) -> bool {
-       if self.objects.is_empty() { return false; }
-       
-       let mut temp_box = AABB::empty();
-       let mut first_box = true;
+        if self.objects.is_empty() {
+            return false;
+        }
 
-       for object in self.objects.iter() {
-           if !object.bounding_box(output_box) { return false; }
-           *output_box = if first_box { temp_box.clone() } else { AABB::surrounding_box(output_box, &temp_box) };
-           first_box = false;
-       }
-       true
+        let mut temp_box = AABB::empty();
+        let mut first_box = true;
+
+        for object in self.objects.iter() {
+            if !object.bounding_box(output_box) {
+                return false;
+            }
+            *output_box = if first_box {
+                temp_box.clone()
+            } else {
+                AABB::surrounding_box(output_box, &temp_box)
+            };
+            first_box = false;
+        }
+        true
     }
 }

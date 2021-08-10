@@ -1,7 +1,8 @@
+use std::f64::consts::PI;
 use std::sync::Arc;
 
 use crate::data::vec3::Vec3;
-use crate::data::{Lambertian, Material};
+use crate::data::{Lambertian, Material, Point3};
 use crate::engine::hittable::{HitRecord, Hittable};
 
 use super::AABB;
@@ -19,6 +20,14 @@ impl Sphere {
             radius,
             mat_ptr,
         }
+    }
+
+    pub fn get_uv(p: &Point3, u: &mut f64, v: &mut f64) {
+        let theta = (-p.y()).acos();
+        let phi = f64::atan2(-p.z(), p.x()) + PI;
+
+        *u = phi / (2.0 * PI);
+        *v = theta / PI;
     }
 }
 
@@ -45,6 +54,7 @@ impl Hittable for Sphere {
         rec.p = ray.at(rec.t);
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(ray, &outward_normal);
+        Sphere::get_uv(&outward_normal, &mut rec.u, &mut rec.v);
         rec.mat_ptr = Arc::clone(&self.mat_ptr);
         return true;
     }
