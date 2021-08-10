@@ -4,6 +4,8 @@ use crate::data::vec3::{Point3, Vec3};
 use crate::data::{Lambertian, Material};
 use crate::engine::ray::Ray;
 
+use super::AABB;
+
 #[derive(Clone)]
 pub struct HitRecord {
     pub p: Point3,
@@ -35,4 +37,5 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
+    fn bounding_box(&self, output_box: &mut AABB) -> bool;
 }

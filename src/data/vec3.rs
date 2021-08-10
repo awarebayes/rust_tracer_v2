@@ -1,5 +1,5 @@
 use rand::{random, Rng};
-use std::{cmp::min, ops};
+use std::{cmp::min, ops::{self, Index}};
 
 const CLOSE_PREC: f64 = 10e-6;
 
@@ -217,6 +217,19 @@ fn is_close(x: f64, y: f64) -> bool {
 impl PartialEq for Vec3 {
     fn eq(&self, other: &Vec3) -> bool {
         is_close(self.x, other.x) && is_close(self.y, other.y) && is_close(self.z, other.z)
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of range")
+        }
     }
 }
 

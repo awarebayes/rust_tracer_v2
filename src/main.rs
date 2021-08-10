@@ -12,9 +12,9 @@ use lodepng;
 use rand::{random, Rng};
 
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
-const WIDTH: usize = 1920;
+const WIDTH: usize = 800;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
-const SAMPLES_PER_PIXEL: usize = 500;
+const SAMPLES_PER_PIXEL: usize = 50;
 const MAX_DEPTH: usize = 100;
 const N_THREADS: usize = 10;
 
