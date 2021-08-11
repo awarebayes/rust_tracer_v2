@@ -303,3 +303,9 @@ mod tests {
         assert_eq!(a, Vec3::new(-1.0, -2.0, -3.0));
     }
 }
+
+impl Color {
+    pub fn from_rgb(r: u8, g: u8, b: u8) -> Color {
+        Color::new(r as f64 / 255.0, g as f64 / 255.0, b as f64 / 255.0)
+    }
+}

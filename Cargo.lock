@@ -251,6 +251,7 @@ dependencies = [
  "indicatif",
  "lodepng",
  "rand",
+ "rgb",
 ]
 
 [[package]]

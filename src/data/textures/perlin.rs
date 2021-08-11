@@ -68,12 +68,12 @@ impl Perlin {
             for j in 0..2 {
                 for k in 0..2 {
                     let c_ijk = c[i][j][k];
-                    let weight_v = Vec3::new(u-i as f64, v-j as f64, w-k as f64);
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
                     let (i, j, k) = (i as f64, j as f64, k as f64);
-                    accum += (i*uu + (1.0-i)*(1.0-uu)) *
-                             (j*vv + (1.0-j)*(1.0-vv)) *
-                             (k*ww + (1.0-k)*(1.0-ww)) * 
-                             c_ijk.dot(&weight_v); 
+                    accum += (i * uu + (1.0 - i) * (1.0 - uu))
+                        * (j * vv + (1.0 - j) * (1.0 - vv))
+                        * (k * ww + (1.0 - k) * (1.0 - ww))
+                        * c_ijk.dot(&weight_v);
                 }
             }
         }
@@ -94,8 +94,7 @@ impl Perlin {
         for di in 0..2 {
             for dj in 0..2 {
                 for dk in 0..2 {
-                    c[di][dj][dk] = self.ranvec[(
-                          self.perm_x[((i + di as i32) & 255) as usize]
+                    c[di][dj][dk] = self.ranvec[(self.perm_x[((i + di as i32) & 255) as usize]
                         ^ self.perm_y[((j + dj as i32) & 255) as usize]
                         ^ self.perm_z[((k + dk as i32) & 255) as usize])
                         as usize];
@@ -127,7 +126,9 @@ pub struct PerlinTexture {
 impl Texture for PerlinTexture {
     fn value(&self, u: f64, v: f64, p: &Vec3) -> Color {
         // Color::new(1.0, 1.0, 1.0) * self.noise.turb(&(self.scale * *p), 7)
-        Color::new(1.0, 1.0, 1.0) * 0.5 * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turb(&(self.scale * *p), 7)).sin())
+        Color::new(1.0, 1.0, 1.0)
+            * 0.5
+            * (1.0 + (self.scale * p.z() + 10.0 * self.noise.turb(&(self.scale * *p), 7)).sin())
     }
 }
 
@@ -138,6 +139,4 @@ impl PerlinTexture {
             scale,
         }
     }
-
-
 }

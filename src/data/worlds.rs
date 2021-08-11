@@ -5,7 +5,7 @@ use rand::random;
 use crate::data::{materials::Dielectric, Color, Lambertian, Material, Metal, Point3, Vec3};
 use crate::engine::{HittableList, Sphere};
 
-use super::textures::{CheckerTexture, PerlinTexture};
+use super::textures::{CheckerTexture, ImageTexture, PerlinTexture};
 
 pub fn marble_land() -> Arc<HittableList> {
     let mut world = HittableList::new();
@@ -123,17 +123,30 @@ pub fn three_balls() -> Arc<HittableList> {
 pub fn balls_perlin() -> Arc<HittableList> {
     let mut world = HittableList::new();
 
-    let checker = Arc::new(PerlinTexture::new(4.0));
+    let perlin = Arc::new(PerlinTexture::new(4.0));
     world.add(Arc::new(Sphere::new(
         Point3::new(0.0, -1000.0, 0.0),
         1000.0,
-        Arc::new(Lambertian::from_texture(checker.clone())),
+        Arc::new(Lambertian::from_texture(perlin.clone())),
     )));
 
     world.add(Arc::new(Sphere::new(
         Point3::new(0.0, 2.0, 0.0),
         2.0,
-        Arc::new(Lambertian::from_texture(checker.clone())),
+        Arc::new(Lambertian::from_texture(perlin.clone())),
+    )));
+
+    Arc::new(world)
+}
+
+pub fn world_map() -> Arc<HittableList> {
+    let mut world = HittableList::new();
+
+    let earth = Arc::new(ImageTexture::new("/home/dev/Documents/programming/rust/rust_tracer/res/earthmap.png"));
+    world.add(Arc::new(Sphere::new(
+        Point3::new(0.0, 0.0, 0.0),
+        2.0,
+        Arc::new(Lambertian::from_texture(earth.clone())),
     )));
 
     Arc::new(world)

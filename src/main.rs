@@ -2,10 +2,7 @@ mod data;
 mod engine;
 mod util;
 
-use data::{
-    worlds::{balls_perlin, marble_land},
-    Color, Point3, Vec3,
-};
+use data::{Color, Point3, Vec3, worlds::{balls_perlin, marble_land, world_map}};
 use engine::{Camera, HitRecord, Hittable, Ray};
 use util::thread_pool::{PlacedPixel, RTThreadPool};
 
@@ -19,7 +16,7 @@ const WIDTH: usize = 800;
 const HEIGHT: usize = (WIDTH as f64 / ASPECT_RATIO) as usize;
 const SAMPLES_PER_PIXEL: usize = 50;
 const MAX_DEPTH: usize = 100;
-const N_THREADS: usize = 1;
+const N_THREADS: usize = 10;
 
 fn ray_color(
     r: &Ray,
@@ -50,7 +47,7 @@ fn ray_color(
 }
 
 fn generate_image() -> Vec<[u8; 4]> {
-    let world = balls_perlin();
+    let world = world_map();
 
     let mut pool = RTThreadPool::new(N_THREADS, WIDTH, HEIGHT);
     pool.start_collecting();
